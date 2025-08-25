@@ -29,7 +29,7 @@ class S3ServiceProvider extends ServiceProvider
             if (config('aws.endpoint')) {
                 $config['endpoint'] = config('aws.endpoint');
                 $config['use_path_style_endpoint'] = config('aws.use_path_style_endpoint', true);
-                
+
                 // ローカル環境ではSSL無効
                 if (config('app.env') === 'local' || config('app.env') === 'development') {
                     $config['use_ssl'] = false;
@@ -62,4 +62,4 @@ class S3ServiceProvider extends ServiceProvider
     {
         //
     }
-} 
+}
