@@ -119,11 +119,12 @@ jobs:
         with:
           name: docker-images
           path: ./docker-images
-          if-no-files-found: warn
+        if: hashFiles('./docker-images/*.tar') != ''
 
   local-deploy:
     needs: build-and-test
     runs-on: ubuntu-latest
+    if: always()
     steps:
       - name: Check build status
         run: |
@@ -137,18 +138,25 @@ jobs:
         with:
           name: docker-images
           path: ./docker-images
-          if-no-files-found: warn
+        continue-on-error: true
 
       - name: Load Docker images
         run: |
           echo "Checking available Docker image files..."
-          ls -la ./docker-images/ || echo "No docker-images directory found"
           
-          if [ -f "./docker-images/laravel-app.tar" ]; then
-            echo "Loading laravel-app.tar..."
-            docker load -i ./docker-images/laravel-app.tar
+          # アーティファクトディレクトリの存在確認
+          if [ -d "./docker-images" ]; then
+            ls -la ./docker-images/
+            
+            if [ -f "./docker-images/laravel-app.tar" ]; then
+              echo "Loading laravel-app.tar..."
+              docker load -i ./docker-images/laravel-app.tar
+            else
+              echo "laravel-app.tar not found, skipping..."
+            fi
           else
-            echo "laravel-app.tar not found, skipping..."
+            echo "docker-images directory not found, creating empty directory..."
+            mkdir -p ./docker-images
           fi
           
           echo "Available Docker images after loading:"
