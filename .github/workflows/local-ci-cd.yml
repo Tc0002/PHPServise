@@ -34,6 +34,13 @@ jobs:
       - name: Install Composer dependencies
         run: composer install --prefer-dist --optimize-autoloader
 
+      - name: Clear Laravel caches
+        run: |
+          php artisan config:clear
+          php artisan cache:clear
+          php artisan route:clear
+          php artisan view:clear
+
       - name: Check for package-lock.json
         run: |
           if [ -f "package-lock.json" ]; then

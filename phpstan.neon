@@ -1,0 +1,31 @@
+parameters:
+    level: 5
+    paths:
+        - app/
+        - tests/
+        - config/
+        - database/
+        - routes/
+    
+    excludePaths:
+        - app/Console/Kernel.php
+        - app/Exceptions/Handler.php
+        - app/Http/Kernel.php
+        - app/Providers/AppServiceProvider.php
+        - app/Providers/AuthServiceProvider.php
+        - app/Providers/EventServiceProvider.php
+        - app/Providers/RouteServiceProvider.php
+    
+    checkMissingIterableValueType: false
+    checkGenericClassInNonGenericObjectType: false
+    
+    # Laravel specific settings
+    checkMissingCallableSignature: false
+    checkMissingCallableSignature: false
+    
+    # Ignore some Laravel magic methods
+    ignoreErrors:
+        - '#Call to an undefined method Illuminate\\Database\\Eloquent\\Model::save#'
+        - '#Call to an undefined method Illuminate\\Database\\Eloquent\\Model::delete#'
+        - '#Call to an undefined method Illuminate\\Database\\Eloquent\\Model::update#'
+        - '#Call to an undefined method Illuminate\\Database\\Eloquent\\Model::create#' 
