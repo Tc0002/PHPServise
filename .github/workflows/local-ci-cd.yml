@@ -34,8 +34,15 @@ jobs:
       - name: Install Composer dependencies
         run: composer install --no-dev --prefer-dist --optimize-autoloader
 
-      - name: Install NPM dependencies
-        run: npm ci
+      - name: Check for package-lock.json
+        run: |
+          if [ -f "package-lock.json" ]; then
+            echo "package-lock.json found, using npm ci"
+            npm ci
+          else
+            echo "package-lock.json not found, using npm install"
+            npm install
+          fi
 
       - name: Run PHPUnit tests
         run: php artisan test
@@ -47,7 +54,12 @@ jobs:
         run: vendor/bin/phpstan analyse --level 5 app/
 
       - name: Build frontend assets
-        run: npm run build
+        run: |
+          if [ -f "package.json" ]; then
+            npm run build
+          else
+            echo "No package.json found, skipping frontend build"
+          fi
 
       - name: Build Docker images
         run: |
