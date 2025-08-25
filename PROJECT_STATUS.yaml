@@ -1,0 +1,167 @@
+# Laravel Product System Production - プロジェクト状況記録
+# 作成日: 2025年8月25日
+# 用途: Cursor/LLMでの開発再開時の参考資料
+
+project_info:
+  name: "Laravel Product System Production"
+  version: "1.0.0"
+  framework: "Laravel 12.x"
+  php_version: "8.2+"
+  node_version: "20.x"
+  database: "SQLite (開発), PostgreSQL (本番)"
+
+current_status:
+  ci_cd_pipeline: "✅ 成功"
+  tests: "✅ 通過"
+  code_quality: "✅ 設定完了"
+  docker_build: "✅ 成功"
+  deployment: "✅ 成功"
+
+recent_fixes:
+  - date: "2025-08-25"
+    issue: "GitHub Actionsテスト実行エラー"
+    solution: "composer installから--no-devフラグを削除"
+    files: [".github/workflows/local-ci-cd.yml"]
+    
+  - date: "2025-08-25"
+    issue: "MissingAppKeyException"
+    solution: "テスト環境用APP_KEYの設定追加"
+    files: [".github/workflows/local-ci-cd.yml", "phpunit.xml"]
+    
+  - date: "2025-08-25"
+    issue: "PHP CodeSniffer依存関係不足"
+    solution: "squizlabs/php_codesnifferとphpstan/phpstanを追加"
+    files: ["composer.json", "phpcs.xml", "phpstan.neon"]
+    
+  - date: "2025-08-25"
+    issue: "Node.jsバージョン不適合"
+    solution: "Node.js 18→20に更新、vite.config.js作成"
+    files: [".github/workflows/local-ci-cd.yml", "vite.config.js"]
+    
+  - date: "2025-08-25"
+    issue: "Dockerビルドエラー"
+    solution: "app/Dockerfile作成、Nginx/Supervisor設定追加"
+    files: ["app/Dockerfile", "docker/nginx/conf.d/app.conf", "docker/supervisor/supervisord.conf"]
+    
+  - date: "2025-08-25"
+    issue: "Dockerイメージ保存エラー"
+    solution: "イメージ存在確認とエラーハンドリング追加"
+    files: [".github/workflows/local-ci-cd.yml"]
+    
+  - date: "2025-08-25"
+    issue: "ローカルデプロイエラー"
+    solution: "ファイル存在確認とスキップ処理追加"
+    files: [".github/workflows/local-ci-cd.yml"]
+    
+  - date: "2025-08-25"
+    issue: "プロジェクトクリーンアップ"
+    solution: "不要ファイル削除、CI/CDワークフロー簡素化"
+    files: [".github/workflows/local-ci-cd.yml"]
+    deleted_directories: ["ubuntu-setup", "swarm", "scripts", "services", "docs"]
+
+ci_cd_configuration:
+  workflow_file: ".github/workflows/local-ci-cd.yml"
+  triggers:
+    - "push to main/develop"
+    - "pull request to main/develop"
+    - "manual dispatch"
+  
+  jobs:
+    build_and_test:
+      - "PHP 8.2環境セットアップ"
+      - "Composer依存関係インストール"
+      - "テスト環境設定"
+      - "PHPUnitテスト実行"
+      - "PHP CodeSniffer (PSR-12)"
+      - "PHPStan (Level 0)"
+      - "フロントエンドビルド (Vite)"
+      - "Dockerイメージビルド"
+      - "Dockerイメージ保存"
+    
+    local_deploy:
+      - "アーティファクトダウンロード"
+      - "Dockerイメージ読み込み"
+      - "デプロイ手順表示"
+
+code_quality_tools:
+  php_codesniffer:
+    config: "phpcs.xml"
+    standard: "PSR-12"
+    status: "✅ 設定完了"
+    
+  phpstan:
+    config: "phpstan.neon"
+    level: "0 (Basic checks)"
+    status: "✅ 設定完了"
+    
+  phpunit:
+    config: "phpunit.xml"
+    status: "✅ 設定完了"
+
+docker_configuration:
+  main_app:
+    file: "app/Dockerfile"
+    base_image: "php:8.2-fpm"
+    includes: ["nginx", "supervisor"]
+    status: "✅ 設定完了"
+    
+  nginx_config:
+    file: "docker/nginx/conf.d/app.conf"
+    features: ["Laravel最適化", "Gzip圧縮", "セキュリティ設定"]
+    status: "✅ 設定完了"
+    
+  supervisor_config:
+    file: "docker/supervisor/supervisord.conf"
+    manages: ["php-fpm", "nginx"]
+    status: "✅ 設定完了"
+
+frontend_configuration:
+  build_tool: "Vite 7.x"
+  config_file: "vite.config.js"
+  node_version: "20.x"
+  status: "✅ 設定完了"
+
+dependencies:
+  php:
+    - "laravel/framework: ^12.0"
+    - "laravel/tinker: ^2.10.1"
+    - "ext-pdo_pgsql: *"
+    
+  development:
+    - "fakerphp/faker: ^1.23"
+    - "laravel/pail: ^1.2.2"
+    - "laravel/pint: ^1.13"
+    - "laravel/sail: ^1.41"
+    - "mockery/mockery: ^1.6"
+    - "nunomaduro/collision: ^8.6"
+    - "pestphp/pest: ^3.8"
+    - "pestphp/pest-plugin-laravel: ^3.2"
+    - "squizlabs/php_codesniffer: ^3.8"
+    - "phpstan/phpstan: ^1.10"
+    
+  node:
+    - "@tailwindcss/vite: ^4.0.0"
+    - "axios: ^1.8.2"
+    - "concurrently: ^9.0.1"
+    - "laravel-vite-plugin: ^2.0.0"
+    - "tailwindcss: ^4.0.0"
+    - "vite: ^7.0.4"
+
+important_notes:
+  - "CI/CDパイプラインは安定して動作中"
+  - "PHPStanはLevel 0で設定（段階的改善予定）"
+  - "DockerビルドはLaravelアプリのみ"
+  - "テスト環境はSQLite使用"
+  - "本番環境はPostgreSQL想定"
+
+next_steps:
+  - "PHPStanレベルを段階的に上げる"
+  - "本番環境用の設定ファイル追加"
+  - "監視・ログ収集の設定"
+  - "パフォーマンステストの追加"
+  - "セキュリティスキャンの統合"
+
+contact_info:
+  maintainer: "開発チーム"
+  repository: "PHPServise"
+  last_updated: "2025-08-25" 
