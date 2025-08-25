@@ -100,19 +100,46 @@ jobs:
           
           echo "Building search-indexer Docker image..."
           docker build -t search-indexer:latest -f services/search-indexer/Dockerfile services/search-indexer/ || echo "Search indexer build failed, continuing..."
+          
+          echo "Docker build completed. Available images:"
+          docker images --format "table {{.Repository}}\t{{.Tag}}\t{{.Size}}"
 
       - name: Save Docker images
         run: |
           mkdir -p ./docker-images
-          docker save -o ./docker-images/laravel-app.tar laravel-app:latest
-          docker save -o ./docker-images/file-processor.tar file-processor:latest
-          docker save -o ./docker-images/search-indexer.tar search-indexer:latest
+          
+          # Check if images exist before saving
+          if docker image inspect laravel-app:latest >/dev/null 2>&1; then
+            echo "Saving laravel-app:latest..."
+            docker save -o ./docker-images/laravel-app.tar laravel-app:latest
+          else
+            echo "laravel-app:latest not found, skipping..."
+          fi
+          
+          if docker image inspect file-processor:latest >/dev/null 2>&1; then
+            echo "Saving file-processor:latest..."
+            docker save -o ./docker-images/file-processor.tar file-processor:latest
+          else
+            echo "file-processor:latest not found, skipping..."
+          fi
+          
+          if docker image inspect search-indexer:latest >/dev/null 2>&1; then
+            echo "Saving search-indexer:latest..."
+            docker save -o ./docker-images/search-indexer.tar search-indexer:latest
+          else
+            echo "search-indexer:latest not found, skipping..."
+          fi
+          
+          # List available images for debugging
+          echo "Available Docker images:"
+          docker images --format "table {{.Repository}}\t{{.Tag}}\t{{.Size}}"
 
       - name: Upload Docker images as artifact
         uses: actions/upload-artifact@v4
         with:
           name: docker-images
           path: ./docker-images
+          if-no-files-found: warn
 
   local-deploy:
     needs: build-and-test
