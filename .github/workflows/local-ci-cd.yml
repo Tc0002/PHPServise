@@ -44,13 +44,26 @@ jobs:
             npm install
           fi
 
+      - name: Set up test environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate --env=testing
+          echo "APP_ENV=testing" >> .env
+          echo "APP_DEBUG=true" >> .env
+          echo "DB_CONNECTION=sqlite" >> .env
+          echo "DB_DATABASE=:memory:" >> .env
+          echo "CACHE_DRIVER=array" >> .env
+          echo "SESSION_DRIVER=array" >> .env
+          echo "QUEUE_CONNECTION=sync" >> .env
+          touch database/database.sqlite
+
       - name: Run PHPUnit tests
         run: |
           if php artisan test; then
             echo "Tests passed using artisan test"
           else
             echo "Falling back to direct PHPUnit execution"
-            ./vendor/bin/phpunit
+            ./vendor/bin/phpunit --configuration=phpunit.xml
           fi
 
       - name: Run PHP CodeSniffer
