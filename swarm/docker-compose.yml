@@ -1,0 +1,324 @@
+version: '3.8'
+
+services:
+  # Traefik - リバースプロキシ・ロードバランサー
+  traefik:
+    image: traefik:v2.10
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker.swarmMode=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--certificatesresolvers.letsencrypt.acme.email=admin@laravel.local"
+      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - traefik-certificates:/letsencrypt
+    networks:
+      - traefik-public
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.traefik.rule=Host(`traefik.localhost`)"
+        - "traefik.http.routers.traefik.service=api@internal"
+        - "traefik.http.routers.traefik.entrypoints=web"
+
+  # Consul - サービスディスカバリ・設定管理
+  consul:
+    image: consul:1.15
+    command: agent -server -bootstrap-expect=1 -ui -client=0.0.0.0
+    ports:
+      - "8500:8500"
+    volumes:
+      - consul-data:/consul/data
+    networks:
+      - traefik-public
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.consul.rule=Host(`consul.localhost`)"
+        - "traefik.http.services.consul.loadbalancer.server.port=8500"
+
+  # PostgreSQL Primary
+  postgres-primary:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: laravel
+      POSTGRES_USER: laravel
+      POSTGRES_PASSWORD: secret
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+    volumes:
+      - postgres-primary-data:/var/lib/postgresql/data
+      - ./postgres/postgresql.conf:/etc/postgresql/postgresql.conf
+      - ./postgres/init:/docker-entrypoint-initdb.d
+    command: postgres -c config_file=/etc/postgresql/postgresql.conf
+    networks:
+      - database
+    deploy:
+      placement:
+        constraints:
+          - node.role == worker
+      replicas: 1
+      labels:
+        - "traefik.enable=false"
+
+  # PostgreSQL Replica
+  postgres-replica:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: laravel
+      POSTGRES_USER: laravel
+      POSTGRES_PASSWORD: secret
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+    volumes:
+      - postgres-replica-data:/var/lib/postgresql/data
+    command: postgres -c hot_standby=on -c primary_conninfo='host=postgres-primary user=laravel password=secret'
+    networks:
+      - database
+    deploy:
+      placement:
+        constraints:
+          - node.role == worker
+      replicas: 1
+      labels:
+        - "traefik.enable=false"
+
+  # Elasticsearch
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    networks:
+      - search
+    deploy:
+      placement:
+        constraints:
+          - node.role == worker
+      replicas: 1
+      labels:
+        - "traefik.enable=false"
+
+  # Redis
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    networks:
+      - cache
+    deploy:
+      placement:
+        constraints:
+          - node.role == worker
+      replicas: 1
+      labels:
+        - "traefik.enable=false"
+
+  # Laravel Application
+  laravel-app:
+    image: laravel-app:latest
+    build:
+      context: ../app
+      dockerfile: Dockerfile
+    environment:
+      - DB_CONNECTION=pgsql
+      - DB_HOST=postgres-primary
+      - DB_PORT=5432
+      - DB_DATABASE=laravel
+      - DB_USERNAME=laravel
+      - DB_PASSWORD=secret
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - ELASTICSEARCH_HOST=elasticsearch
+      - ELASTICSEARCH_PORT=9200
+    volumes:
+      - ../app:/var/www
+      - ./php/local.ini:/usr/local/etc/php/conf.d/local.ini
+    networks:
+      - app
+      - database
+      - cache
+      - search
+    deploy:
+      placement:
+        constraints:
+          - node.role == worker
+      replicas: 2
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.laravel.rule=Host(`laravel.localhost`)"
+        - "traefik.http.services.laravel.loadbalancer.server.port=9000"
+        - "traefik.http.routers.laravel.entrypoints=web"
+
+  # Nginx
+  nginx:
+    image: nginx:alpine
+    volumes:
+      - ../app:/var/www
+      - ./nginx/conf.d:/etc/nginx/conf.d
+    networks:
+      - app
+    deploy:
+      placement:
+        constraints:
+          - node.role == worker
+      replicas: 2
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.nginx.rule=Host(`nginx.localhost`)"
+        - "traefik.http.services.nginx.loadbalancer.server.port=80"
+        - "traefik.http.routers.nginx.entrypoints=web"
+
+  # MinIO (S3互換サービス)
+  minio:
+    image: minio/minio:latest
+    container_name: minio
+    ports:
+      - "9000:9000"      # API
+      - "9001:9001"      # Web UI
+    environment:
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER:-minioadmin}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD:-minioadmin}
+      - MINIO_CONSOLE_ADDRESS=:9001
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address :9001
+    networks:
+      - storage
+    deploy:
+      placement:
+        constraints:
+          - node.role == worker
+      replicas: 1
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.minio.rule=Host(`minio.localhost`)"
+        - "traefik.http.services.minio.loadbalancer.server.port=9001"
+        - "traefik.http.routers.minio.entrypoints=web"
+
+  # File Processor Service
+  file-processor:
+    image: file-processor:latest
+    build:
+      context: ../services/file-processor
+      dockerfile: Dockerfile
+    environment:
+      - AWS_ENDPOINT=http://minio:9000
+      - AWS_ACCESS_KEY_ID=${MINIO_ROOT_USER:-minioadmin}
+      - AWS_SECRET_ACCESS_KEY=${MINIO_ROOT_PASSWORD:-minioadmin}
+      - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:-us-east-1}
+      - S3_BUCKET=${S3_BUCKET:-laravel-product-system}
+      - ELASTICSEARCH_HOST=elasticsearch
+      - ELASTICSEARCH_PORT=9200
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    networks:
+      - search
+      - cache
+      - storage
+    deploy:
+      placement:
+        constraints:
+          - node.role == worker
+      replicas: 1
+      labels:
+        - "traefik.enable=false"
+
+  # Search Indexer Service
+  search-indexer:
+    image: search-indexer:latest
+    build:
+      context: ../services/search-indexer
+      dockerfile: Dockerfile
+    environment:
+      - AWS_ENDPOINT=http://minio:9000
+      - AWS_ACCESS_KEY_ID=${MINIO_ROOT_USER:-minioadmin}
+      - AWS_SECRET_ACCESS_KEY=${MINIO_ROOT_PASSWORD:-minioadmin}
+      - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:-us-east-1}
+      - S3_BUCKET=${S3_BUCKET:-laravel-product-system}
+      - ELASTICSEARCH_HOST=elasticsearch
+      - ELASTICSEARCH_PORT=9200
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    networks:
+      - search
+      - cache
+      - storage
+    deploy:
+      placement:
+        constraints:
+          - node.role == worker
+      replicas: 1
+      labels:
+        - "traefik.enable=false"
+
+  # pgAdmin
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@laravel.local
+      - PGADMIN_DEFAULT_PASSWORD=admin
+      - PGADMIN_CONFIG_SERVER_MODE=False
+      - PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED=False
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+    networks:
+      - database
+    deploy:
+      placement:
+        constraints:
+          - node.role == worker
+      replicas: 1
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.pgadmin.rule=Host(`pgadmin.localhost`)"
+        - "traefik.http.services.pgadmin.loadbalancer.server.port=80"
+        - "traefik.http.routers.pgadmin.entrypoints=web"
+
+networks:
+  traefik-public:
+    external: true
+  app:
+    driver: overlay
+  database:
+    driver: overlay
+  cache:
+    driver: overlay
+  search:
+    driver: overlay
+  storage:
+    driver: overlay
+
+volumes:
+  traefik-certificates:
+    driver: local
+  consul-data:
+    driver: local
+  postgres-primary-data:
+    driver: local
+  postgres-replica-data:
+    driver: local
+  elasticsearch-data:
+    driver: local
+  redis-data:
+    driver: local
+  pgadmin-data:
+    driver: local
+  minio_data:
+    driver: local 
