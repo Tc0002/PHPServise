@@ -1,0 +1,99 @@
+name: Local CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+      - develop
+  workflow_dispatch: # 手動実行を許可
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: pdo_pgsql, pgsql, mbstring, exif, pcntl, bcmath, gd, zip, intl, opcache, xml, xsl, soap, redis, curl, json, openssl
+          ini-values: memory_limit=256M, max_execution_time=180
+          tools: composer:v2
+
+      - name: Install Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install Composer dependencies
+        run: composer install --no-dev --prefer-dist --optimize-autoloader
+
+      - name: Install NPM dependencies
+        run: npm ci
+
+      - name: Run PHPUnit tests
+        run: php artisan test
+
+      - name: Run PHP CodeSniffer
+        run: vendor/bin/phpcs --standard=PSR12 app/
+
+      - name: Run PHPStan
+        run: vendor/bin/phpstan analyse --level 5 app/
+
+      - name: Build frontend assets
+        run: npm run build
+
+      - name: Build Docker images
+        run: |
+          docker build -t laravel-app:latest -f app/Dockerfile app/
+          docker build -t file-processor:latest -f services/file-processor/Dockerfile services/file-processor/
+          docker build -t search-indexer:latest -f services/search-indexer/Dockerfile services/search-indexer/
+
+      - name: Save Docker images
+        run: |
+          mkdir -p ./docker-images
+          docker save -o ./docker-images/laravel-app.tar laravel-app:latest
+          docker save -o ./docker-images/file-processor.tar file-processor:latest
+          docker save -o ./docker-images/search-indexer.tar search-indexer:latest
+
+      - name: Upload Docker images as artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: docker-images
+          path: ./docker-images
+
+  local-deploy:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Docker images artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: docker-images
+          path: ./docker-images
+
+      - name: Load Docker images
+        run: |
+          docker load -i ./docker-images/laravel-app.tar
+          docker load -i ./docker-images/file-processor.tar
+          docker load -i ./docker-images/search-indexer.tar
+
+      - name: Local Deployment Instructions
+        run: |
+          echo "=== ローカルデプロイ手順 ==="
+          echo "1. Dockerイメージのダウンロード完了"
+          echo "2. ローカル環境での実行手順:"
+          echo "   cd /path/to/your/local/project"
+          echo "   docker load -i laravel-app.tar"
+          echo "   docker load -i file-processor.tar"
+          echo "   docker load -i search-indexer.tar"
+          echo "   docker-compose up -d"
+          echo ""
+          echo "3. または、Docker Swarmを使用:"
+          echo "   docker stack deploy -c swarm/docker-compose.yml laravel-system"
