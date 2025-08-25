@@ -32,7 +32,7 @@ jobs:
           node-version: '18'
 
       - name: Install Composer dependencies
-        run: composer install --no-dev --prefer-dist --optimize-autoloader
+        run: composer install --prefer-dist --optimize-autoloader
 
       - name: Check for package-lock.json
         run: |
@@ -45,7 +45,13 @@ jobs:
           fi
 
       - name: Run PHPUnit tests
-        run: php artisan test
+        run: |
+          if php artisan test; then
+            echo "Tests passed using artisan test"
+          else
+            echo "Falling back to direct PHPUnit execution"
+            ./vendor/bin/phpunit
+          fi
 
       - name: Run PHP CodeSniffer
         run: vendor/bin/phpcs --standard=PSR12 app/
