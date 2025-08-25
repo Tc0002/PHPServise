@@ -47,7 +47,7 @@ jobs:
       - name: Set up test environment
         run: |
           cp .env.example .env
-          php artisan key:generate --env=testing
+          php artisan key:generate
           echo "APP_ENV=testing" >> .env
           echo "APP_DEBUG=true" >> .env
           echo "DB_CONNECTION=sqlite" >> .env
@@ -59,6 +59,7 @@ jobs:
 
       - name: Run PHPUnit tests
         run: |
+          echo "Current APP_KEY: $(grep APP_KEY .env | cut -d '=' -f2)"
           if php artisan test; then
             echo "Tests passed using artisan test"
           else
