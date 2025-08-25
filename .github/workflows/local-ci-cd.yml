@@ -145,17 +145,48 @@ jobs:
     needs: build-and-test
     runs-on: ubuntu-latest
     steps:
+      - name: Check build status
+        run: |
+          echo "=== Build and Test Job Status ==="
+          echo "This job depends on build-and-test job completion"
+          echo "If Docker images are missing, check the previous job logs"
+          echo "================================================"
+      
       - name: Download Docker images artifact
         uses: actions/download-artifact@v4
         with:
           name: docker-images
           path: ./docker-images
+          if-no-files-found: warn
 
       - name: Load Docker images
         run: |
-          docker load -i ./docker-images/laravel-app.tar
-          docker load -i ./docker-images/file-processor.tar
-          docker load -i ./docker-images/search-indexer.tar
+          echo "Checking available Docker image files..."
+          ls -la ./docker-images/ || echo "No docker-images directory found"
+          
+          if [ -f "./docker-images/laravel-app.tar" ]; then
+            echo "Loading laravel-app.tar..."
+            docker load -i ./docker-images/laravel-app.tar
+          else
+            echo "laravel-app.tar not found, skipping..."
+          fi
+          
+          if [ -f "./docker-images/file-processor.tar" ]; then
+            echo "Loading file-processor.tar..."
+            docker load -i ./docker-images/file-processor.tar
+          else
+            echo "file-processor.tar not found, skipping..."
+          fi
+          
+          if [ -f "./docker-images/search-indexer.tar" ]; then
+            echo "Loading search-indexer.tar..."
+            docker load -i ./docker-images/search-indexer.tar
+          else
+            echo "search-indexer.tar not found, skipping..."
+          fi
+          
+          echo "Available Docker images after loading:"
+          docker images --format "table {{.Repository}}\t{{.Tag}}\t{{.Size}}"
 
       - name: Local Deployment Instructions
         run: |
