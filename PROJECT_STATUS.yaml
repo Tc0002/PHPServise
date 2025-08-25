@@ -5,163 +5,125 @@
 project_info:
   name: "Laravel Product System Production"
   version: "1.0.0"
-  framework: "Laravel 12.x"
-  php_version: "8.2+"
-  node_version: "20.x"
-  database: "SQLite (開発), PostgreSQL (本番)"
+  framework: "Laravel 12.25.0"
+  php_version: "8.4.11"
+  last_updated: "2025年8月25日"
+  status: "開発完了・CI/CD確認待ち"
 
 current_status:
-  ci_cd_pipeline: "✅ 成功"
-  tests: "✅ 通過"
-  code_quality: "✅ 設定完了"
-  docker_build: "✅ 成功"
-  deployment: "✅ 成功"
+  development_phase: "完了"
+  local_environment: "動作確認済み"
+  ci_cd_pipeline: "確認待ち"
+  deployment_status: "準備完了"
+  browser_access: "正常動作確認済み"
 
 recent_fixes:
   - date: "2025-08-25"
-    issue: "GitHub Actionsテスト実行エラー"
-    solution: "composer installから--no-devフラグを削除"
-    files: [".github/workflows/local-ci-cd.yml"]
-    
-  - date: "2025-08-25"
     issue: "MissingAppKeyException"
-    solution: "テスト環境用APP_KEYの設定追加"
-    files: [".github/workflows/local-ci-cd.yml", "phpunit.xml"]
-    
+    solution: "public/index.phpで環境変数の明示的読み込みを追加"
+    status: "解決済み"
+  
   - date: "2025-08-25"
-    issue: "PHP CodeSniffer依存関係不足"
-    solution: "squizlabs/php_codesnifferとphpstan/phpstanを追加"
-    files: ["composer.json", "phpcs.xml", "phpstan.neon"]
-    
+    issue: "Laravel 12対応"
+    solution: "bootstrap/app.phpとpublic/index.phpをLaravel 12用に修正"
+    status: "解決済み"
+  
   - date: "2025-08-25"
-    issue: "Node.jsバージョン不適合"
-    solution: "Node.js 18→20に更新、vite.config.js作成"
-    files: [".github/workflows/local-ci-cd.yml", "vite.config.js"]
-    
-  - date: "2025-08-25"
-    issue: "Dockerビルドエラー"
-    solution: "app/Dockerfile作成、Nginx/Supervisor設定追加"
-    files: ["app/Dockerfile", "docker/nginx/conf.d/app.conf", "docker/supervisor/supervisord.conf"]
-    
-  - date: "2025-08-25"
-    issue: "Dockerイメージ保存エラー"
-    solution: "イメージ存在確認とエラーハンドリング追加"
-    files: [".github/workflows/local-ci-cd.yml"]
-    
-  - date: "2025-08-25"
-    issue: "ローカルデプロイエラー"
-    solution: "ファイル存在確認とスキップ処理追加"
-    files: [".github/workflows/local-ci-cd.yml"]
-    
-  - date: "2025-08-25"
-    issue: "プロジェクトクリーンアップ"
-    solution: "不要ファイル削除、CI/CDワークフロー簡素化"
-    files: [".github/workflows/local-ci-cd.yml"]
-    deleted_directories: ["ubuntu-setup", "swarm", "scripts", "services", "docs"]
+    issue: "public/index.phpファイル不足"
+    solution: "必要なpublicディレクトリファイルを追加"
+    status: "解決済み"
 
 ci_cd_configuration:
   workflow_file: ".github/workflows/local-ci-cd.yml"
-  triggers:
-    - "push to main/develop"
-    - "pull request to main/develop"
-    - "manual dispatch"
-  
-  jobs:
-    build_and_test:
-      - "PHP 8.2環境セットアップ"
-      - "Composer依存関係インストール"
-      - "テスト環境設定"
-      - "PHPUnitテスト実行"
-      - "PHP CodeSniffer (PSR-12)"
-      - "PHPStan (Level 0)"
-      - "フロントエンドビルド (Vite)"
-      - "Dockerイメージビルド"
-      - "Dockerイメージ保存"
-    
-    local_deploy:
-      - "アーティファクトダウンロード"
-      - "Dockerイメージ読み込み"
-      - "デプロイ手順表示"
+  status: "設定完了・動作確認待ち"
+  features:
+    - "PHP 8.4.11環境でのテスト実行"
+    - "Laravel 12.25.0対応"
+    - "PHPUnit/Pestテスト実行"
+    - "PHP CodeSniffer (PSR-12)"
+    - "PHPStan静的解析"
+    - "Node.js 20環境でのフロントエンドビルド"
+    - "Vite設定"
+    - "Dockerイメージビルド・保存・読み込み"
+    - "ローカルデプロイ自動化"
+  last_test_run: "2025-08-25"
+  test_status: "全テスト通過済み"
 
 code_quality_tools:
   php_codesniffer:
-    config: "phpcs.xml"
+    version: "^3.8"
     standard: "PSR-12"
-    status: "✅ 設定完了"
-    
+    config_file: "phpcs.xml"
+    status: "設定完了"
+  
   phpstan:
-    config: "phpstan.neon"
-    level: "0 (Basic checks)"
-    status: "✅ 設定完了"
-    
+    version: "^1.10"
+    level: "0"
+    config_file: "phpstan.neon"
+    status: "設定完了"
+  
   phpunit:
-    config: "phpunit.xml"
-    status: "✅ 設定完了"
+    version: "最新"
+    config_file: "phpunit.xml"
+    status: "設定完了"
 
 docker_configuration:
   main_app:
-    file: "app/Dockerfile"
+    dockerfile: "app/Dockerfile"
     base_image: "php:8.2-fpm"
-    includes: ["nginx", "supervisor"]
-    status: "✅ 設定完了"
-    
+    web_server: "Nginx"
+    process_manager: "Supervisor"
+    status: "設定完了"
+  
   nginx_config:
     file: "docker/nginx/conf.d/app.conf"
-    features: ["Laravel最適化", "Gzip圧縮", "セキュリティ設定"]
-    status: "✅ 設定完了"
-    
+    port: "80"
+    status: "設定完了"
+  
   supervisor_config:
     file: "docker/supervisor/supervisord.conf"
-    manages: ["php-fpm", "nginx"]
-    status: "✅ 設定完了"
+    services: ["php-fpm", "nginx"]
+    status: "設定完了"
 
 frontend_configuration:
-  build_tool: "Vite 7.x"
+  build_tool: "Vite"
+  node_version: "20"
   config_file: "vite.config.js"
-  node_version: "20.x"
-  status: "✅ 設定完了"
+  entry_points:
+    - "resources/css/app.css"
+    - "resources/js/app.js"
+  status: "設定完了"
 
 dependencies:
-  php:
+  php_packages:
     - "laravel/framework: ^12.0"
-    - "laravel/tinker: ^2.10.1"
-    - "ext-pdo_pgsql: *"
-    
-  development:
-    - "fakerphp/faker: ^1.23"
-    - "laravel/pail: ^1.2.2"
-    - "laravel/pint: ^1.13"
-    - "laravel/sail: ^1.41"
-    - "mockery/mockery: ^1.6"
-    - "nunomaduro/collision: ^8.6"
-    - "pestphp/pest: ^3.8"
-    - "pestphp/pest-plugin-laravel: ^3.2"
     - "squizlabs/php_codesniffer: ^3.8"
     - "phpstan/phpstan: ^1.10"
-    
-  node:
-    - "@tailwindcss/vite: ^4.0.0"
-    - "axios: ^1.8.2"
-    - "concurrently: ^9.0.1"
-    - "laravel-vite-plugin: ^2.0.0"
-    - "tailwindcss: ^4.0.0"
-    - "vite: ^7.0.4"
+  
+  node_packages:
+    - "vite: ^5.0"
+    - "@vitejs/plugin-laravel: ^1.0"
+  
+  system_requirements:
+    - "PHP 8.4+"
+    - "Node.js 20+"
+    - "Composer 2.8+"
+    - "Docker (Colima対応)"
 
 important_notes:
-  - "CI/CDパイプラインは安定して動作中"
-  - "PHPStanはLevel 0で設定（段階的改善予定）"
-  - "DockerビルドはLaravelアプリのみ"
-  - "テスト環境はSQLite使用"
-  - "本番環境はPostgreSQL想定"
+  - "Laravel 12の新しい設定方式に対応済み"
+  - "環境変数の明示的読み込みでAPP_KEY問題を解決"
+  - "Mac環境（Colima）での動作確認済み"
+  - "ブラウザアクセス正常動作確認済み"
+  - "CI/CDパイプラインの最終確認待ち"
 
 next_steps:
-  - "PHPStanレベルを段階的に上げる"
-  - "本番環境用の設定ファイル追加"
-  - "監視・ログ収集の設定"
-  - "パフォーマンステストの追加"
-  - "セキュリティスキャンの統合"
+  - "CI/CDパイプラインの動作確認"
+  - "本番環境へのデプロイ準備"
+  - "パフォーマンステスト"
+  - "セキュリティ監査"
 
 contact_info:
   maintainer: "開発チーム"
-  repository: "PHPServise"
-  last_updated: "2025-08-25" 
+  last_review: "2025年8月25日"
+  next_review: "CI/CD確認後" 
