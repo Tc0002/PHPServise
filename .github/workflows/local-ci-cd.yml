@@ -95,12 +95,6 @@ jobs:
           echo "Building Laravel application Docker image..."
           docker build -t laravel-app:latest -f app/Dockerfile . || echo "Laravel app build failed, continuing..."
           
-          echo "Building file-processor Docker image..."
-          docker build -t file-processor:latest -f services/file-processor/Dockerfile services/file-processor/ || echo "File processor build failed, continuing..."
-          
-          echo "Building search-indexer Docker image..."
-          docker build -t search-indexer:latest -f services/search-indexer/Dockerfile services/search-indexer/ || echo "Search indexer build failed, continuing..."
-          
           echo "Docker build completed. Available images:"
           docker images --format "table {{.Repository}}\t{{.Tag}}\t{{.Size}}"
 
@@ -114,20 +108,6 @@ jobs:
             docker save -o ./docker-images/laravel-app.tar laravel-app:latest
           else
             echo "laravel-app:latest not found, skipping..."
-          fi
-          
-          if docker image inspect file-processor:latest >/dev/null 2>&1; then
-            echo "Saving file-processor:latest..."
-            docker save -o ./docker-images/file-processor.tar file-processor:latest
-          else
-            echo "file-processor:latest not found, skipping..."
-          fi
-          
-          if docker image inspect search-indexer:latest >/dev/null 2>&1; then
-            echo "Saving search-indexer:latest..."
-            docker save -o ./docker-images/search-indexer.tar search-indexer:latest
-          else
-            echo "search-indexer:latest not found, skipping..."
           fi
           
           # List available images for debugging
@@ -171,20 +151,6 @@ jobs:
             echo "laravel-app.tar not found, skipping..."
           fi
           
-          if [ -f "./docker-images/file-processor.tar" ]; then
-            echo "Loading file-processor.tar..."
-            docker load -i ./docker-images/file-processor.tar
-          else
-            echo "file-processor.tar not found, skipping..."
-          fi
-          
-          if [ -f "./docker-images/search-indexer.tar" ]; then
-            echo "Loading search-indexer.tar..."
-            docker load -i ./docker-images/search-indexer.tar
-          else
-            echo "search-indexer.tar not found, skipping..."
-          fi
-          
           echo "Available Docker images after loading:"
           docker images --format "table {{.Repository}}\t{{.Tag}}\t{{.Size}}"
 
@@ -195,9 +161,7 @@ jobs:
           echo "2. ローカル環境での実行手順:"
           echo "   cd /path/to/your/local/project"
           echo "   docker load -i laravel-app.tar"
-          echo "   docker load -i file-processor.tar"
-          echo "   docker load -i search-indexer.tar"
-          echo "   docker-compose up -d"
+          echo "   docker run -d -p 80:80 laravel-app:latest"
           echo ""
-          echo "3. または、Docker Swarmを使用:"
-          echo "   docker stack deploy -c swarm/docker-compose.yml laravel-system"
+          echo "3. または、カスタム設定で実行:"
+          echo "   docker run -d -p 80:80 -e APP_ENV=production laravel-app:latest"
