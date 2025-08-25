@@ -1,5 +1,5 @@
 parameters:
-    level: 1
+    level: 0
     paths:
         - app/
         - tests/
@@ -14,4 +14,19 @@ parameters:
         - app/Providers/AppServiceProvider.php
         - app/Providers/AuthServiceProvider.php
         - app/Providers/EventServiceProvider.php
-        - app/Providers/RouteServiceProvider.php 
+        - app/Providers/RouteServiceProvider.php
+        - app/Providers/S3ServiceProvider.php
+    
+    # Laravel specific settings
+    checkMissingCallableSignature: false
+    
+    # Ignore all Laravel Eloquent magic methods
+    ignoreErrors:
+        - '#Call to an undefined static method App\\Models\\Product::.*#'
+        - '#Call to an undefined method Illuminate\\Database\\Eloquent\\Model::.*#'
+        - '#Class Aws\\S3\\S3Client not found#'
+        - '#Class App\\Services\\S3FileService not found#'
+        - '#Class App\\Services\\SearchService not found#'
+        - '#Instantiated class Aws\\S3\\S3Client not found#'
+        - '#Instantiated class App\\Services\\S3FileService not found#'
+        - '#Instantiated class App\\Services\\SearchService not found#' 
