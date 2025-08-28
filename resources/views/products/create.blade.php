@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>商品登録 - 商品管理システム</title>
+    <title>新規登録 - 製品管理システム</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
@@ -239,9 +239,9 @@
     <div class="main-content">
         <div class="content-card">
             <div class="page-header">
-                <h1 class="page-title">商品登録</h1>
+                <h1 class="page-title">新規登録</h1>
                 <a href="{{ route('products.index') }}" class="btn btn-secondary btn-custom">
-                    商品一覧に戻る
+                                          登録一覧に戻る
                 </a>
             </div>
 
@@ -249,20 +249,20 @@
                 @csrf
                 
                 <div class="mb-4">
-                    <label for="name" class="form-label required-field">商品名</label>
+                    <label for="name" class="form-label required-field">製品名</label>
                     <input type="text" class="form-control @error('name') is-invalid @enderror" 
                            id="name" name="name" value="{{ old('name') }}" 
-                           placeholder="商品名を入力してください" required>
+                                                        placeholder="製品名を入力してください" required>
                     @error('name')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
                 </div>
 
                 <div class="mb-4">
-                    <label for="description" class="form-label required-field">商品説明</label>
+                    <label for="description" class="form-label required-field">製品説明</label>
                     <textarea class="form-control @error('description') is-invalid @enderror" 
                               id="description" name="description" rows="4" 
-                              placeholder="商品の詳細な説明を入力してください" required>{{ old('description') }}</textarea>
+                              placeholder="製品の詳細な説明を入力してください" required>{{ old('description') }}</textarea>
                     @error('description')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
@@ -310,7 +310,7 @@
                     <label for="image_path" class="form-label">画像パス</label>
                     <input type="text" class="form-control @error('image_path') is-invalid @enderror" 
                            id="image_path" name="image_path" value="{{ old('image_path') }}"
-                           placeholder="商品画像のURLまたはパスを入力してください">
+                                                        placeholder="製品画像のURLまたはパスを入力してください">
                     @error('image_path')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
@@ -321,14 +321,14 @@
                         <input class="form-check-input" type="checkbox" id="is_active" name="is_active" value="1" 
                                {{ old('is_active', true) ? 'checked' : '' }}>
                         <label class="form-check-label" for="is_active">
-                            商品を有効にする
+                            製品を有効にする
                         </label>
                     </div>
                 </div>
 
                 <div class="d-grid gap-2 d-md-flex justify-content-md-end">
                     <button type="submit" class="btn btn-primary">
-                        商品を登録する
+                        製品を登録する
                     </button>
                 </div>
             </form>

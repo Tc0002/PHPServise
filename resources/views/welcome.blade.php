@@ -279,8 +279,8 @@
             </a>
             <ul class="navbar-nav">
                 <li><a href="/">ホーム</a></li>
-                <li><a href="/products">製品一覧</a></li>
-                <li><a href="/products/create">製品作成</a></li>
+                <li><a href="/products">登録一覧</a></li>
+                <li><a href="/products/create">新規登録</a></li>
                 @if (Route::has('login'))
                     @auth
                         <li><a href="{{ url('/dashboard') }}">ダッシュボード</a></li>
@@ -305,8 +305,8 @@
                 製品の登録、編集、削除を簡単に行えます。
             </p>
             <div class="cta-buttons">
-                <a href="/products" class="btn btn-primary">製品一覧を見る</a>
-                <a href="/products/create" class="btn btn-secondary">新規製品を登録</a>
+                <a href="/products" class="btn btn-primary">登録一覧を見る</a>
+                <a href="/products/create" class="btn btn-secondary">新規登録</a>
             </div>
         </section>
 

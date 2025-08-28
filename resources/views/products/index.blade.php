@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>商品管理システム - 商品一覧</title>
+    <title>製品管理システム - 登録一覧</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
@@ -206,9 +206,9 @@
     <div class="main-content">
         <div class="content-card">
             <div class="page-header">
-                <h1 class="page-title">商品一覧</h1>
+                <h1 class="page-title">登録一覧</h1>
                 <a href="{{ route('products.create') }}" class="btn btn-primary btn-custom">
-                    新規商品登録
+                                          新規登録
                 </a>
             </div>
 
@@ -224,7 +224,7 @@
                     <thead>
                         <tr>
                             <th>ID</th>
-                            <th>商品名</th>
+                            <th>製品名</th>
                             <th>カテゴリ</th>
                             <th>価格</th>
                             <th>在庫</th>
@@ -278,10 +278,10 @@
                             <tr>
                                 <td colspan="7" class="text-center py-4">
                                     <div class="text-muted">
-                                        <h5>商品が登録されていません</h5>
-                                        <p>最初の商品を登録してみましょう！</p>
-                                        <a href="{{ route('products.create') }}" class="btn btn-primary">
-                                            商品を登録する
+                                                                <h5>製品が登録されていません</h5>
+                        <p>最初の製品を登録してみましょう！</p>
+                        <a href="{{ route('products.create') }}" class="btn btn-primary">
+                            製品を登録する
                                         </a>
                                     </div>
                                 </td>
