@@ -2,7 +2,7 @@
     <h1 class="page-title">{{ $title }}</h1>
     <div class="page-actions">
         @if(isset($actions))
-            {{ $actions }}
+            {!! $actions !!}
         @endif
     </div>
 </div> 

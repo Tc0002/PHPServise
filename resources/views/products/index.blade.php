@@ -23,15 +23,75 @@
                 </div>
             @endif
 
+            <!-- 総件数表示 -->
+            <div class="text-muted mb-3">
+                <small>総件数: {{ $products->total() }}件</small>
+            </div>
+
             <div class="table-responsive">
                 <table class="table">
                     <thead>
                         <tr>
-                            <th>ID</th>
-                            <th>製品名</th>
-                            <th>カテゴリ</th>
-                            <th>価格</th>
-                            <th>在庫</th>
+                            <th>
+                                @php
+                                    $nextDirection = ($sortField === 'id' && $sortDirection === 'asc') ? 'desc' : 'asc';
+                                @endphp
+                                <a href="{{ request()->fullUrlWithQuery(['sort' => 'id', 'direction' => $nextDirection]) }}" 
+                                   class="sort-link {{ $sortField === 'id' ? 'active' : '' }}">
+                                    ID
+                                    @if($sortField === 'id')
+                                        <span class="sort-icon">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
+                                    @endif
+                                </a>
+                            </th>
+                            <th>
+                                @php
+                                    $nextDirection = ($sortField === 'name' && $sortDirection === 'asc') ? 'desc' : 'asc';
+                                @endphp
+                                <a href="{{ request()->fullUrlWithQuery(['sort' => 'name', 'direction' => $nextDirection]) }}" 
+                                   class="sort-link {{ $sortField === 'name' ? 'active' : '' }}">
+                                    製品名
+                                    @if($sortField === 'name')
+                                        <span class="sort-icon">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
+                                    @endif
+                                </a>
+                            </th>
+                            <th>
+                                @php
+                                    $nextDirection = ($sortField === 'category' && $sortDirection === 'asc') ? 'desc' : 'asc';
+                                @endphp
+                                <a href="{{ request()->fullUrlWithQuery(['sort' => 'category', 'direction' => $nextDirection]) }}" 
+                                   class="sort-link {{ $sortField === 'category' ? 'active' : '' }}">
+                                    カテゴリ
+                                    @if($sortField === 'category')
+                                        <span class="sort-icon">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
+                                    @endif
+                                </a>
+                            </th>
+                            <th>
+                                @php
+                                    $nextDirection = ($sortField === 'price' && $sortDirection === 'asc') ? 'desc' : 'asc';
+                                @endphp
+                                <a href="{{ request()->fullUrlWithQuery(['sort' => 'price', 'direction' => $nextDirection]) }}" 
+                                   class="sort-link {{ $sortField === 'price' ? 'active' : '' }}">
+                                    価格
+                                    @if($sortField === 'price')
+                                        <span class="sort-icon">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
+                                    @endif
+                                </a>
+                            </th>
+                            <th>
+                                @php
+                                    $nextDirection = ($sortField === 'stock' && $sortDirection === 'asc') ? 'desc' : 'asc';
+                                @endphp
+                                <a href="{{ request()->fullUrlWithQuery(['sort' => 'stock', 'direction' => $nextDirection]) }}" 
+                                   class="sort-link {{ $sortField === 'stock' ? 'active' : '' }}">
+                                    在庫
+                                    @if($sortField === 'stock')
+                                        <span class="sort-icon">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
+                                    @endif
+                                </a>
+                            </th>
                             <th>ステータス</th>
                             <th>操作</th>
                         </tr>
@@ -97,7 +157,7 @@
 
             @if($products->hasPages())
                 <div class="d-flex justify-content-center mt-4">
-                    {{ $products->links() }}
+                    {!! $products->links('vendor.pagination.simple-bootstrap-4') !!}
                 </div>
             @endif
         </div>

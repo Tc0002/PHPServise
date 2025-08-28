@@ -11,10 +11,28 @@ class ProductController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $products = Product::latest()->paginate(10);
-        return view('products.index', compact('products'));
+        $sortField = $request->get('sort', 'id');
+        $sortDirection = $request->get('direction', 'desc');
+
+        // ソート可能なフィールドを定義
+        $allowedSortFields = ['id', 'name', 'category', 'price', 'stock', 'created_at'];
+
+        // 不正なソートフィールドの場合はデフォルト値を使用
+        if (!in_array($sortField, $allowedSortFields)) {
+            $sortField = 'id';
+        }
+
+        // ソート方向の検証
+        if (!in_array($sortDirection, ['asc', 'desc'])) {
+            $sortDirection = 'desc';
+        }
+
+        $products = Product::orderBy($sortField, $sortDirection)->paginate(10);
+        $products->setPath('products');
+
+        return view('products.index', compact('products', 'sortField', 'sortDirection'));
     }
 
     /**
