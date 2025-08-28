@@ -5,10 +5,12 @@ on:
     branches:
       - main
       - develop
+      - forMac
   pull_request:
     branches:
       - main
       - develop
+      - forMac
   workflow_dispatch: # 手動実行を許可
 
 jobs:
