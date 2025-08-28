@@ -25,7 +25,4 @@
 
     <!-- Show sniff codes -->
     <arg value="n"/>
-
-    <!-- Show colors -->
-    <arg value="--colors"/>
 </ruleset> 
