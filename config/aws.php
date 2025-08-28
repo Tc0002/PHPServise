@@ -46,4 +46,4 @@ return [
         'verify' => env('MINIO_VERIFY_SSL', false),
     ],
 
-]; 
+];

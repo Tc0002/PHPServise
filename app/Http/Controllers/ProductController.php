@@ -15,9 +15,10 @@ class ProductController extends Controller
     {
         $sortField = $request->get('sort', 'id');
         $sortDirection = $request->get('direction', 'desc');
+        $search = $request->get('search', '');
 
         // ソート可能なフィールドを定義
-        $allowedSortFields = ['id', 'name', 'category', 'price', 'stock', 'created_at'];
+        $allowedSortFields = ['id', 'name', 'barcode', 'category', 'price', 'stock', 'created_at'];
 
         // 不正なソートフィールドの場合はデフォルト値を使用
         if (!in_array($sortField, $allowedSortFields)) {
@@ -29,10 +30,22 @@ class ProductController extends Controller
             $sortDirection = 'desc';
         }
 
-        $products = Product::orderBy($sortField, $sortDirection)->paginate(10);
+        // 検索クエリの構築
+        $query = Product::query();
+
+        if (!empty($search)) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('barcode', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%")
+                  ->orWhere('category', 'like', "%{$search}%");
+            });
+        }
+
+        $products = $query->orderBy($sortField, $sortDirection)->paginate(10);
         $products->setPath('products');
 
-        return view('products.index', compact('products', 'sortField', 'sortDirection'));
+        return view('products.index', compact('products', 'sortField', 'sortDirection', 'search'));
     }
 
     /**
@@ -50,6 +63,7 @@ class ProductController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
+            'barcode' => 'nullable|string|max:255|unique:products,barcode',
             'description' => 'required|string',
             'price' => 'required|numeric|min:0',
             'stock' => 'required|integer|min:0',
@@ -96,6 +110,7 @@ class ProductController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
+            'barcode' => 'nullable|string|max:255|unique:products,barcode,' . $id,
             'description' => 'required|string',
             'price' => 'required|numeric|min:0',
             'stock' => 'required|integer|min:0',

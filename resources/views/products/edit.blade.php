@@ -48,6 +48,22 @@
                                 @enderror
                             </div>
 
+                            <!-- バーコード -->
+                            <div class="form-group">
+                                <label for="barcode" class="form-label">バーコード</label>
+                                <input type="text" 
+                                       id="barcode" 
+                                       name="barcode" 
+                                       value="{{ old('barcode', $product->barcode) }}" 
+                                       class="form-input @error('barcode') border-red-500 @enderror"
+                                       placeholder="バーコードを入力してください（オプション）"
+                                       autocomplete="off">
+                                <p class="text-gray-500 text-sm mt-1">バーコードリーダーで読み取り可能</p>
+                                @error('barcode')
+                                    <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                                @enderror
+                            </div>
+
                             <!-- カテゴリー -->
                             <div class="form-group">
                                 <label for="category" class="form-label">カテゴリー <span class="text-red-500">*</span></label>
