@@ -1,0 +1,26 @@
+[Unit]
+Description=Laravel Queue Worker
+After=network.target mysql.service
+Wants=mysql.service
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/html
+ExecStart=/usr/bin/php /var/www/html/artisan queue:work --queue=lightweight --timeout=30 --tries=2 --max-jobs=10 --max-time=300 --memory=128 --sleep=3 --verbose
+Restart=always
+RestartSec=3
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=laravel-queue-worker
+
+# セキュリティ設定
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/www/html/storage
+
+[Install]
+WantedBy=multi-user.target 

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Jobs\ProductWriteJob;
 use Illuminate\Http\Request;
 
 class ProductController extends Controller
@@ -38,10 +39,18 @@ class ProductController extends Controller
             'image_path' => 'nullable|string|max:255',
         ]);
 
-        Product::create($request->all());
-
-        return redirect()->route('products.index')
-            ->with('success', '商品が正常に登録されました。');
+        // 軽量キュー処理でSQLite書き込み制限を回避
+        try {
+            ProductWriteJob::dispatch('create', $request->all());
+            
+            return redirect()->route('products.index')
+                ->with('success', '製品の登録がキューに追加されました。処理完了までお待ちください。');
+        } catch (\Exception $e) {
+            // フォールバック: 直接処理
+            Product::create($request->all());
+            return redirect()->route('products.index')
+                ->with('success', '製品が正常に登録されました。');
+        }
     }
 
     /**
@@ -76,11 +85,19 @@ class ProductController extends Controller
             'image_path' => 'nullable|string|max:255',
         ]);
 
-        $product = Product::findOrFail($id);
-        $product->update($request->all());
-
-        return redirect()->route('products.index')
-            ->with('success', '商品が正常に更新されました。');
+        // 軽量キュー処理でSQLite書き込み制限を回避
+        try {
+            ProductWriteJob::dispatch('update', $request->all(), $id);
+            
+            return redirect()->route('products.index')
+                ->with('success', '製品の更新がキューに追加されました。処理完了までお待ちください。');
+        } catch (\Exception $e) {
+            // フォールバック: 直接処理
+            $product = Product::findOrFail($id);
+            $product->update($request->all());
+            return redirect()->route('products.index')
+                ->with('success', '製品が正常に更新されました。');
+        }
     }
 
     /**
@@ -88,10 +105,18 @@ class ProductController extends Controller
      */
     public function destroy(string $id)
     {
-        $product = Product::findOrFail($id);
-        $product->delete();
-
-        return redirect()->route('products.index')
-            ->with('success', '商品が正常に削除されました。');
+        // 軽量キュー処理でSQLite書き込み制限を回避
+        try {
+            ProductWriteJob::dispatch('delete', [], $id);
+            
+            return redirect()->route('products.index')
+                ->with('success', '製品の削除がキューに追加されました。処理完了までお待ちください。');
+        } catch (\Exception $e) {
+            // フォールバック: 直接処理
+            $product = Product::findOrFail($id);
+            $product->delete();
+            return redirect()->route('products.index')
+                ->with('success', '製品が正常に削除されました。');
+        }
     }
 }

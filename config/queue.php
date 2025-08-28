@@ -72,6 +72,11 @@ return [
             'after_commit' => false,
         ],
 
+        'file' => [
+            'driver' => 'file',
+            'path' => storage_path('app/queues'),
+        ],
+
     ],
 
     /*
