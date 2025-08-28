@@ -42,7 +42,7 @@ class ProductController extends Controller
         // 軽量キュー処理でSQLite書き込み制限を回避
         try {
             ProductWriteJob::dispatch('create', $request->all());
-            
+
             return redirect()->route('products.index')
                 ->with('success', '製品の登録がキューに追加されました。処理完了までお待ちください。');
         } catch (\Exception $e) {
@@ -88,7 +88,7 @@ class ProductController extends Controller
         // 軽量キュー処理でSQLite書き込み制限を回避
         try {
             ProductWriteJob::dispatch('update', $request->all(), $id);
-            
+
             return redirect()->route('products.index')
                 ->with('success', '製品の更新がキューに追加されました。処理完了までお待ちください。');
         } catch (\Exception $e) {
@@ -108,7 +108,7 @@ class ProductController extends Controller
         // 軽量キュー処理でSQLite書き込み制限を回避
         try {
             ProductWriteJob::dispatch('delete', [], $id);
-            
+
             return redirect()->route('products.index')
                 ->with('success', '製品の削除がキューに追加されました。処理完了までお待ちください。');
         } catch (\Exception $e) {

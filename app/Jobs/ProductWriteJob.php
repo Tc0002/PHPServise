@@ -11,7 +11,10 @@ use App\Models\Product;
 
 class ProductWriteJob implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable;
+    use InteractsWithQueue;
+    use Queueable;
+    use SerializesModels;
 
     // メモリ使用量最適化設定
     public $timeout = 30;        // 30秒でタイムアウト
@@ -28,7 +31,7 @@ class ProductWriteJob implements ShouldQueue
         $this->operation = $operation;
         $this->data = $data;
         $this->productId = $productId;
-        
+
         // 軽量キュー設定
         $this->onQueue('lightweight');
         $this->delay(now()->addSeconds(1)); // 1秒遅延
@@ -60,4 +63,4 @@ class ProductWriteJob implements ShouldQueue
         // 失敗時の軽量処理
         \Log::error('Product write job permanently failed: ' . $exception->getMessage());
     }
-} 
+}
